@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tattvartha Code - C++ & Low-Latency Trading</title>
+    <meta name="description" content="High-performance C++ programming, low-latency trading, and algorithmic optimization insights.">
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+        }
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        nav {
+            margin: 20px 0;
+        }
+        nav a {
+            text-decoration: none;
+            color: #2c3e50;
+            margin: 0 15px;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .blog-list {
+            text-align: left;
+            padding: 0;
+            list-style: none;
+        }
+        .blog-list li {
+            margin-bottom: 15px;
+        }
+        .blog-list a {
+            text-decoration: none;
+            color: #2980b9;
+            font-size: 18px;
+        }
+        .blog-list a:hover {
+            text-decoration: underline;
+        }
+        footer {
+            margin-top: 30px;
+            padding: 15px;
+            background: #2c3e50;
+            color: white;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        Tattvartha Code
+    </header>
+    
+    <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/blog">Blog</a>
+        <a href="/contact">Contact</a>
+    </nav>
+
+    <div class="container">
+        <h1>Welcome to Tattvartha Code</h1>
+        <p>Explore high-performance C++ optimization, low-latency trading strategies, and algorithmic trading insights.</p>
+
+        <h2>Latest Posts</h2>
+        <ul class="blog-list">
+            {{ range first 5 .Site.RegularPages }}
+            <li><a href="{{ .RelPermalink }}">{{ .Title }}</a></li>
+            {{ end }}
+        </ul>
+    </div>
+
+    <footer>
+        © 2025 Tattvartha Code | <a href="https://tattvarthacode.com">Visit Blog</a>
+    </footer>
+</body>
+</html>
