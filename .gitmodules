@@ -4,3 +4,6 @@
 [submodule "site/themes/docsy"]
 	path = site/themes/docsy
 	url = https://github.com/google/docsy.git
+[submodule "site/themes/PaperMod"]
+	path = site/themes/PaperMod
+	url = https://github.com/adityatelange/hugo-PaperMod
