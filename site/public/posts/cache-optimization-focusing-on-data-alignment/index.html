@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=40217&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Cache Optimization: Focusing on Data Alignment | Tattvartha Code</title>
+<meta name="keywords" content="C&#43;&#43;, Performance, Cache Optimization">
+<meta name="description" content="Introduction
+Cache optimization is a cornerstone of high-performance computing. This article focuses on optimizing data alignment and data structures for improved cache utilization. By leveraging benchmarking results, we refine the design and implementation of a MarketData struct to illustrate tangible performance gains through alignment techniques.
+Note
+This is the first article in a series on cache optimization, concentrating on alignment. To keep things simple, we omit multicore processing issues. In such scenarios, the shared nature of L1 and L2 caches introduces complexities like false sharing, fault tolerance, and more. These will be addressed in future articles. Techniques like buffering and prefetching, while omitted here, will also be covered in subsequent discussions.">
+<meta name="author" content="Pralay Patoria">
+<link rel="canonical" href="http://localhost:40217/posts/cache-optimization-focusing-on-data-alignment/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.45e028aa8ce0961349adf411b013ee39406be2c0bc80d4ea3fc04555f7f4611a.css" integrity="sha256-ReAoqozglhNJrfQRsBPuOUBr4sC8gNTqP8BFVff0YRo=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:40217/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:40217/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:40217/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:40217/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:40217/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:40217/posts/cache-optimization-focusing-on-data-alignment/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:40217/" accesskey="h" title="Tattvartha Code (Alt + H)">Tattvartha Code</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:40217/" title="Welcome to TattvarthaCode">
+                    <span>Welcome to TattvarthaCode</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:40217/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:40217/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:40217/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:40217/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Cache Optimization: Focusing on Data Alignment
+      <span class="entry-hint" title="Draft">
+        <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 -960 960 960" fill="currentColor">
+          <path
+            d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
+        </svg>
+      </span>
+    </h1>
+    <div class="post-meta"><span title='2025-02-02 12:00:00 +0530 +0530'>February 2, 2025</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;Pralay Patoria
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#introduction" aria-label="Introduction">Introduction</a><ul>
+                        
+                <li>
+                    <a href="#note" aria-label="Note">Note</a></li></ul>
+                </li>
+                <li>
+                    <a href="#initial-implementation-baseline-design" aria-label="Initial Implementation: Baseline Design">Initial Implementation: Baseline Design</a><ul>
+                        
+                <li>
+                    <a href="#analysis" aria-label="Analysis">Analysis</a></li></ul>
+                </li>
+                <li>
+                    <a href="#improving-memory-layout-and-alignment" aria-label="Improving Memory Layout and Alignment">Improving Memory Layout and Alignment</a><ul>
+                        
+                <li>
+                    <a href="#reordering-fields-to-minimize-padding" aria-label="Reordering Fields to Minimize Padding">Reordering Fields to Minimize Padding</a></li>
+                <li>
+                    <a href="#explanation" aria-label="Explanation">Explanation</a></li></ul>
+                </li>
+                <li>
+                    <a href="#explicit-alignment-for-cache-line-optimization" aria-label="Explicit Alignment for Cache Line Optimization">Explicit Alignment for Cache Line Optimization</a><ul>
+                        
+                <li>
+                    <a href="#note-1" aria-label="Note">Note</a></li></ul>
+                </li>
+                <li>
+                    <a href="#further-improvement-by-aligning-containers-to-cache-line" aria-label="Further Improvement by Aligning Containers to Cache Line">Further Improvement by Aligning Containers to Cache Line</a><ul>
+                        
+                <li>
+                    <a href="#using-aligned-arrays" aria-label="Using Aligned Arrays">Using Aligned Arrays</a></li>
+                <li>
+                    <a href="#explanation-1" aria-label="Explanation">Explanation</a></li>
+                <li>
+                    <a href="#c-style-aligned-arrays" aria-label="C-Style Aligned Arrays">C-Style Aligned Arrays</a></li>
+                <li>
+                    <a href="#using-aligned-vectors" aria-label="Using Aligned Vectors">Using Aligned Vectors</a></li>
+                <li>
+                    <a href="#explanation-2" aria-label="Explanation">Explanation</a></li></ul>
+                </li>
+                <li>
+                    <a href="#additional-optimizations" aria-label="Additional Optimizations">Additional Optimizations</a><ul>
+                        
+                <li>
+                    <a href="#loop-unrolling" aria-label="Loop Unrolling">Loop Unrolling</a></li>
+                <li>
+                    <a href="#why-unroll-4" aria-label="Why Unroll 4?">Why Unroll 4?</a></li>
+                <li>
+                    <a href="#explanation-3" aria-label="Explanation">Explanation</a></li></ul>
+                </li>
+                <li>
+                    <a href="#conclusion" aria-label="Conclusion">Conclusion</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="introduction">Introduction<a hidden class="anchor" aria-hidden="true" href="#introduction">#</a></h2>
+<p>Cache optimization is a cornerstone of high-performance computing. This article focuses on optimizing data alignment and data structures for improved cache utilization. By leveraging benchmarking results, we refine the design and implementation of a <code>MarketData</code> struct to illustrate tangible performance gains through alignment techniques.</p>
+<h3 id="note">Note<a hidden class="anchor" aria-hidden="true" href="#note">#</a></h3>
+<p>This is the first article in a series on cache optimization, concentrating on alignment. To keep things simple, we omit multicore processing issues. In such scenarios, the shared nature of L1 and L2 caches introduces complexities like false sharing, fault tolerance, and more. These will be addressed in future articles. Techniques like buffering and prefetching, while omitted here, will also be covered in subsequent discussions.</p>
+<hr>
+<h2 id="initial-implementation-baseline-design">Initial Implementation: Baseline Design<a hidden class="anchor" aria-hidden="true" href="#initial-implementation-baseline-design">#</a></h2>
+<p>The initial design of the <code>MarketData</code> struct is as follows:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">MarketData</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> symbol_id;  <span style="color:#75715e">// 4 bytes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">double</span> price;   <span style="color:#75715e">// 8 bytes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> volume;     <span style="color:#75715e">// 4 bytes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>};
+</span></span></code></pre></div><h3 id="analysis">Analysis<a hidden class="anchor" aria-hidden="true" href="#analysis">#</a></h3>
+<ul>
+<li><strong>Field Sizes and Padding:</strong>
+<ul>
+<li><code>int</code> fields (<code>symbol_id</code> and <code>volume</code>) are 4 bytes each, while <code>double price</code> is 8 bytes.</li>
+<li>Due to alignment rules, the compiler adds padding after <code>symbol_id</code> (4 bytes) and after <code>volume</code> (4 bytes), making the total size of the struct 24 bytes (16 bytes for fields + 8 bytes padding).</li>
+</ul>
+</li>
+<li><strong>Cache Line Fit:</strong>
+<ul>
+<li>Assuming a typical cache line size of 64 bytes, each instance of <code>MarketData</code> leaves unused space in the cache line. This could lead to inefficient cache utilization when processing arrays of <code>MarketData</code>.</li>
+</ul>
+</li>
+</ul>
+<p>Let’s address these inefficiencies through iterative improvements.</p>
+<hr>
+<h2 id="improving-memory-layout-and-alignment">Improving Memory Layout and Alignment<a hidden class="anchor" aria-hidden="true" href="#improving-memory-layout-and-alignment">#</a></h2>
+<h3 id="reordering-fields-to-minimize-padding">Reordering Fields to Minimize Padding<a hidden class="anchor" aria-hidden="true" href="#reordering-fields-to-minimize-padding">#</a></h3>
+<p>By rearranging fields, we can reduce the padding and optimize the memory layout.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">MarketDataReordered</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">double</span> price;   <span style="color:#75715e">// 8 bytes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> symbol_id;  <span style="color:#75715e">// 4 bytes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> volume;     <span style="color:#75715e">// 4 bytes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>};
+</span></span></code></pre></div><h3 id="explanation">Explanation<a hidden class="anchor" aria-hidden="true" href="#explanation">#</a></h3>
+<ul>
+<li><strong>Field Sizes and Padding:</strong>
+<ul>
+<li>Placing the largest field (<code>double price</code>) first eliminates the padding after <code>symbol_id</code>.</li>
+<li>Total size is now 16 bytes (all fields fit contiguously without padding).</li>
+</ul>
+</li>
+<li><strong>Cache Line Fit:</strong>
+<ul>
+<li>This smaller size increases the number of <code>MarketDataReordered</code> instances that fit in a single cache line, improving cache efficiency during sequential access.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="explicit-alignment-for-cache-line-optimization">Explicit Alignment for Cache Line Optimization<a hidden class="anchor" aria-hidden="true" href="#explicit-alignment-for-cache-line-optimization">#</a></h2>
+<p>Aligning the struct to the cache line size ensures that each instance starts at a cache-line boundary, reducing cache contention in multithreaded scenarios.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">alignas</span>(<span style="color:#ae81ff">64</span>) MarketDataAligned {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">double</span> price;   <span style="color:#75715e">// 8 bytes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> symbol_id;  <span style="color:#75715e">// 4 bytes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> volume;     <span style="color:#75715e">// 4 bytes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// Padding: 48 bytes (added to make total size 64 bytes)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>};
+</span></span></code></pre></div><h3 id="note-1">Note<a hidden class="anchor" aria-hidden="true" href="#note-1">#</a></h3>
+<ul>
+<li>While aligning to 64 bytes is useful in multithreaded contexts to avoid false sharing, it introduces unnecessary memory overhead for single-threaded applications. For optimal single-threaded performance, the <code>MarketDataReordered</code> struct (16 bytes) is preferred.</li>
+</ul>
+<hr>
+<h2 id="further-improvement-by-aligning-containers-to-cache-line">Further Improvement by Aligning Containers to Cache Line<a hidden class="anchor" aria-hidden="true" href="#further-improvement-by-aligning-containers-to-cache-line">#</a></h2>
+<p>Efficient batch processing requires that arrays or vectors of data are also cache-aligned.</p>
+<h3 id="using-aligned-arrays">Using Aligned Arrays<a hidden class="anchor" aria-hidden="true" href="#using-aligned-arrays">#</a></h3>
+<p>Aligned arrays ensure contiguous, cache-friendly storage for fixed-size data.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">template</span> <span style="color:#f92672">&lt;</span><span style="color:#66d9ef">typename</span> T, std<span style="color:#f92672">::</span>size_t N<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">AlignedArray</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">alignas</span>(<span style="color:#ae81ff">64</span>) std<span style="color:#f92672">::</span>array<span style="color:#f92672">&lt;</span>T, N<span style="color:#f92672">&gt;</span> data;
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">using</span> AlignedMarketDataArray <span style="color:#f92672">=</span> AlignedArray<span style="color:#f92672">&lt;</span>MarketDataReordered, <span style="color:#ae81ff">1000</span><span style="color:#f92672">&gt;</span>;
+</span></span></code></pre></div><h3 id="explanation-1">Explanation<a hidden class="anchor" aria-hidden="true" href="#explanation-1">#</a></h3>
+<ul>
+<li><strong>Field Sizes and Padding:</strong>
+<ul>
+<li>Each <code>MarketDataReordered</code> instance is 16 bytes.</li>
+<li>The total size of the array is a multiple of 64 bytes, ensuring cache alignment.</li>
+</ul>
+</li>
+<li><strong>Cache Line Fit:</strong>
+<ul>
+<li>Sequential processing of <code>AlignedMarketDataArray</code> leverages cache lines effectively, reducing cache misses.</li>
+</ul>
+</li>
+</ul>
+<h3 id="c-style-aligned-arrays">C-Style Aligned Arrays<a hidden class="anchor" aria-hidden="true" href="#c-style-aligned-arrays">#</a></h3>
+<p>For applications requiring C-style arrays, similar alignment can be achieved using explicit memory alignment.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">AlignedCArray</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">alignas</span>(<span style="color:#ae81ff">64</span>) MarketDataReordered data[<span style="color:#ae81ff">1000</span>];
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><h3 id="using-aligned-vectors">Using Aligned Vectors<a hidden class="anchor" aria-hidden="true" href="#using-aligned-vectors">#</a></h3>
+<p>Dynamic arrays can also benefit from cache alignment by using a custom aligned allocator.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">template</span> <span style="color:#f92672">&lt;</span><span style="color:#66d9ef">typename</span> T, std<span style="color:#f92672">::</span>size_t Alignment<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">aligned_allocator</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">using</span> value_type <span style="color:#f92672">=</span> T;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    T<span style="color:#f92672">*</span> <span style="color:#a6e22e">allocate</span>(std<span style="color:#f92672">::</span>size_t n) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">void</span><span style="color:#f92672">*</span> ptr <span style="color:#f92672">=</span> <span style="color:#66d9ef">nullptr</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (posix_memalign(<span style="color:#f92672">&amp;</span>ptr, Alignment, n <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(T)) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">throw</span> std<span style="color:#f92672">::</span>bad_alloc();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">static_cast</span><span style="color:#f92672">&lt;</span>T<span style="color:#f92672">*&gt;</span>(ptr);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">deallocate</span>(T<span style="color:#f92672">*</span> ptr, std<span style="color:#f92672">::</span>size_t) { free(ptr); }
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">using</span> AlignedVector <span style="color:#f92672">=</span> std<span style="color:#f92672">::</span>vector<span style="color:#f92672">&lt;</span>MarketDataReordered, aligned_allocator<span style="color:#f92672">&lt;</span>MarketDataReordered, <span style="color:#ae81ff">64</span><span style="color:#f92672">&gt;&gt;</span>;
+</span></span></code></pre></div><h3 id="explanation-2">Explanation<a hidden class="anchor" aria-hidden="true" href="#explanation-2">#</a></h3>
+<ul>
+<li><strong>Dynamic Size Flexibility:</strong>
+<ul>
+<li>While dynamic allocation adds overhead, the aligned allocator ensures that data is cache-aligned for efficient access.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="additional-optimizations">Additional Optimizations<a hidden class="anchor" aria-hidden="true" href="#additional-optimizations">#</a></h2>
+<h3 id="loop-unrolling">Loop Unrolling<a hidden class="anchor" aria-hidden="true" href="#loop-unrolling">#</a></h3>
+<p>Unrolling loops reduces loop control overhead and enhances instruction-level parallelism. Additionally, it leverages cache efficiency by processing multiple elements loaded into a cache line in a single iteration.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">Process</span>(AlignedMarketDataArray updates) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#pragma GCC unroll 4
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">auto</span><span style="color:#f92672">&amp;</span> update : updates.data) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Process market data
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="why-unroll-4">Why Unroll 4?<a hidden class="anchor" aria-hidden="true" href="#why-unroll-4">#</a></h3>
+<ul>
+<li><strong>Cache Line Fit:</strong>
+<ul>
+<li>With a <code>MarketDataReordered</code> size of 16 bytes and a 64-byte cache line, four instances fit perfectly into a single cache line. Unrolling the loop by 4 ensures that all elements loaded into the cache line are processed in one iteration, maximizing cache utilization.</li>
+</ul>
+</li>
+<li><strong>Reduced Loop Overhead:</strong>
+<ul>
+<li>Fewer loop control instructions are executed, improving efficiency.</li>
+</ul>
+</li>
+<li><strong>Other Benefits:</strong>
+<ul>
+<li>Unrolling also allows better instruction pipelining and parallelism, enabling the CPU to execute multiple instructions simultaneously.</li>
+</ul>
+</li>
+</ul>
+<h3 id="explanation-3">Explanation<a hidden class="anchor" aria-hidden="true" href="#explanation-3">#</a></h3>
+<ul>
+<li>By unrolling the loop to match the number of elements fitting into a cache line, we align the processing logic with hardware-level optimizations. This reduces memory access latencies and maximizes throughput.</li>
+</ul>
+<hr>
+<h2 id="conclusion">Conclusion<a hidden class="anchor" aria-hidden="true" href="#conclusion">#</a></h2>
+<p>Through iterative optimizations, we achieved:</p>
+<ol>
+<li>Reduced padding by reordering fields.</li>
+<li>Aligned data structures to cache line boundaries (where necessary).</li>
+<li>Leveraged aligned containers for batch processing.</li>
+<li>Enhanced performance with loop unrolling tailored to cache line size.</li>
+</ol>
+<p>Future work will explore techniques like buffering and prefetching, along with advanced considerations for multicore architectures, in subsequent articles.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:40217/tags/c&#43;&#43;/">C&#43;&#43;</a></li>
+      <li><a href="http://localhost:40217/tags/performance/">Performance</a></li>
+      <li><a href="http://localhost:40217/tags/cache-optimization/">Cache Optimization</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="http://localhost:40217/posts/cache-optimization-through-prefetching/">
+    <span class="title">« Prev</span>
+    <br>
+    <span>Cache Optimization through Prefetching: Enhancing Non-Contiguous Data Processing</span>
+  </a>
+  <a class="next" href="http://localhost:40217/posts/false_sharing_adjacent_variables/">
+    <span class="title">Next »</span>
+    <br>
+    <span>False Sharing Scenario: When Multiple Threads Modify Adjacent Variables</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:40217/">Tattvartha Code</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

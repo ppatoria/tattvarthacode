@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Cache Hierarchy and Sharing in Multi-Processor Machines | Tattvartha Code</title>
+<meta name="keywords" content="C&#43;&#43;, Performance, Cache Optimization">
+<meta name="description" content="Typical Cache Hierarchy
+In multi-core processors, the cache hierarchy plays a crucial role in improving performance by minimizing the time taken to access frequently used data. Here&rsquo;s a breakdown of the typical cache levels:
+
+L1 Cache: The smallest and fastest cache, private to each core.
+L2 Cache: Larger than L1, usually private to each core but can also be shared in some systems.
+L3 Cache: The largest cache, shared across all cores in the processor.
+Main Memory (RAM): The largest and slowest storage layer, accessed when data is not found in the caches.
+
+Single-Core vs Multi-Core Architecture
+We moved from single-core to multi-core processors, which made computers faster, especially by running tasks in parallel. However, this also increased complexity for developers, requiring careful optimization for efficient code execution. To understand this better, let’s examine the basic structure of multi-core processors and how they handle memory and cache.">
+<meta name="author" content="Pralay Patoria">
+<link rel="canonical" href="http://localhost:1313/posts/cache-hierarchy-and-sharing-in-multi-processor-machines/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.45e028aa8ce0961349adf411b013ee39406be2c0bc80d4ea3fc04555f7f4611a.css" integrity="sha256-ReAoqozglhNJrfQRsBPuOUBr4sC8gNTqP8BFVff0YRo=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/cache-hierarchy-and-sharing-in-multi-processor-machines/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Tattvartha Code (Alt + H)">Tattvartha Code</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/" title="Welcome to TattvarthaCode">
+                    <span>Welcome to TattvarthaCode</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="http://localhost:1313/">Home</a>&nbsp;»&nbsp;<a href="http://localhost:1313/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Cache Hierarchy and Sharing in Multi-Processor Machines
+      <span class="entry-hint" title="Draft">
+        <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 -960 960 960" fill="currentColor">
+          <path
+            d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
+        </svg>
+      </span>
+    </h1>
+    <div class="post-meta"><span title='2025-02-02 12:00:00 +0530 +0530'>February 2, 2025</span>&nbsp;·&nbsp;3 min&nbsp;·&nbsp;Pralay Patoria
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#typical-cache-hierarchy" aria-label="Typical Cache Hierarchy">Typical Cache Hierarchy</a></li>
+                <li>
+                    <a href="#single-core-vs-multi-core-architecture" aria-label="Single-Core vs Multi-Core Architecture">Single-Core vs Multi-Core Architecture</a><ul>
+                        
+                <li>
+                    <a href="#understanding-the-diagram" aria-label="Understanding the Diagram">Understanding the Diagram</a></li>
+                <li>
+                    <a href="#why-this-matters" aria-label="Why This Matters">Why This Matters</a></li></ul>
+                </li>
+                <li>
+                    <a href="#checking-your-cpus-cache-configuration" aria-label="Checking Your CPU&rsquo;s Cache Configuration">Checking Your CPU&rsquo;s Cache Configuration</a><ul>
+                        
+                <li>
+                    <a href="#interpretation" aria-label="Interpretation">Interpretation</a></li></ul>
+                </li>
+                <li>
+                    <a href="#cache-sharing-and-potential-issues" aria-label="Cache Sharing and Potential Issues">Cache Sharing and Potential Issues</a><ul>
+                        
+                <li>
+                    <a href="#issues-in-multi-core-architectures" aria-label="Issues in Multi-Core Architectures">Issues in Multi-Core Architectures</a>
+                </li>
+            </ul>
+            </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h3 id="typical-cache-hierarchy">Typical Cache Hierarchy<a hidden class="anchor" aria-hidden="true" href="#typical-cache-hierarchy">#</a></h3>
+<p>In multi-core processors, the cache hierarchy plays a crucial role in improving performance by minimizing the time taken to access frequently used data. Here&rsquo;s a breakdown of the typical cache levels:</p>
+<ol>
+<li><strong>L1 Cache</strong>: The smallest and fastest cache, private to each core.</li>
+<li><strong>L2 Cache</strong>: Larger than L1, usually private to each core but can also be shared in some systems.</li>
+<li><strong>L3 Cache</strong>: The largest cache, shared across all cores in the processor.</li>
+<li><strong>Main Memory (RAM)</strong>: The largest and slowest storage layer, accessed when data is not found in the caches.</li>
+</ol>
+<h3 id="single-core-vs-multi-core-architecture">Single-Core vs Multi-Core Architecture<a hidden class="anchor" aria-hidden="true" href="#single-core-vs-multi-core-architecture">#</a></h3>
+<p>We moved from single-core to multi-core processors, which made computers faster, especially by running tasks in parallel. However, this also increased complexity for developers, requiring careful optimization for efficient code execution. To understand this better, let’s examine the basic structure of multi-core processors and how they handle memory and cache.</p>
+<p>The following diagram illustrates the difference between a single-core processor and a multi-core processor, highlighting the relationship between CPU cores, their respective caches, and main memory.</p>
+<p><img alt="Multi-Core vs Single-Core Architecture" loading="lazy" src="/diagrams/single_vs_multi_core.png"></p>
+<h4 id="understanding-the-diagram">Understanding the Diagram<a hidden class="anchor" aria-hidden="true" href="#understanding-the-diagram">#</a></h4>
+<p>The diagram shows two types of processors:</p>
+<ol>
+<li>
+<p><strong>Single-Core Processor</strong></p>
+<ul>
+<li>Has <strong>one</strong> core handling all tasks.</li>
+<li>Includes <strong>private L1 and L2 caches</strong> to store frequently used data.</li>
+<li>Accesses <strong>main memory (RAM)</strong> when data is not available in the cache.</li>
+</ul>
+</li>
+<li>
+<p><strong>Multi-Core Processor</strong></p>
+<ul>
+<li>Has <strong>multiple cores</strong>, allowing parallel execution.</li>
+<li>Each core has its <strong>own private L1 and L2 caches</strong> (as commonly seen in Intel processors).</li>
+<li>An <strong>L3 cache acts as a buffer for data exchange between cores and helps reduce main memory accesses</strong>.</li>
+<li>Reduces the need to access <strong>main memory</strong>, improving performance.</li>
+</ul>
+</li>
+</ol>
+<h4 id="why-this-matters">Why This Matters<a hidden class="anchor" aria-hidden="true" href="#why-this-matters">#</a></h4>
+<p>Multi-core processors improve speed and efficiency, but they also introduce <strong>new challenges</strong> like cache coherence, false sharing, and synchronization overhead. The rest of the article will explore these issues and their impact on performance.</p>
+<h3 id="checking-your-cpus-cache-configuration">Checking Your CPU&rsquo;s Cache Configuration<a hidden class="anchor" aria-hidden="true" href="#checking-your-cpus-cache-configuration">#</a></h3>
+<p>If you have an Intel processor like mine, you can check your system’s cache configuration using the following command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ lscpu | grep -i cache
+</span></span><span style="display:flex;"><span>L1d cache:                          <span style="color:#ae81ff">64</span> KiB <span style="color:#f92672">(</span><span style="color:#ae81ff">2</span> instances<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>L1i cache:                          <span style="color:#ae81ff">64</span> KiB <span style="color:#f92672">(</span><span style="color:#ae81ff">2</span> instances<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>L2 cache:                           <span style="color:#ae81ff">512</span> KiB <span style="color:#f92672">(</span><span style="color:#ae81ff">2</span> instances<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>L3 cache:                           <span style="color:#ae81ff">3</span> MiB <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> instance<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p><em>Note: This configuration is specific to my Intel processor and may differ for other models.</em></p>
+<h4 id="interpretation">Interpretation<a hidden class="anchor" aria-hidden="true" href="#interpretation">#</a></h4>
+<ul>
+<li><strong>L1d &amp; L1i caches</strong>: 64 KiB each with <strong>2 instances</strong> → This indicates that L1 cache is <strong>private per core</strong>.</li>
+<li><strong>L2 cache</strong>: 512 KiB with <strong>2 instances</strong> → Each core likely has its own private L2 cache.</li>
+<li><strong>L3 cache</strong>: 3 MiB with <strong>1 instance</strong> → This shows that L3 cache is <strong>shared across all cores</strong>.</li>
+</ul>
+<p>This system has <strong>private L1 and L2 caches per core</strong> and a <strong>shared L3 cache</strong>, which is a common configuration in modern processors like those from <strong>Intel</strong>.</p>
+<h3 id="cache-sharing-and-potential-issues">Cache Sharing and Potential Issues<a hidden class="anchor" aria-hidden="true" href="#cache-sharing-and-potential-issues">#</a></h3>
+<ul>
+<li><strong>Private Caches</strong>: Cores have their own L1 and L2 caches, designed to provide fast access to frequently used data specific to each core.</li>
+<li><strong>Shared Cache</strong>: The L3 cache is shared by all cores, allowing for efficient communication and data exchange between cores.</li>
+</ul>
+<p>However, cache sharing introduces some challenges:</p>
+<h4 id="issues-in-multi-core-architectures">Issues in Multi-Core Architectures<a hidden class="anchor" aria-hidden="true" href="#issues-in-multi-core-architectures">#</a></h4>
+<ol>
+<li>
+<p><strong>Cache Coherence</strong>: To ensure all cores have a consistent view of the data, cache coherence protocols (like MESI) are employed. These protocols track the state of each cache line to maintain consistency.</p>
+</li>
+<li>
+<p><strong>False Sharing</strong>: False sharing occurs when independent variables, stored in the same cache line, are modified by different threads running on separate cores. This results in unnecessary cache invalidation, reducing performance.</p>
+</li>
+<li>
+<p><strong>Cache Thrashing</strong>: When multiple cores frequently access and modify the same cache line, it leads to constant invalidation and reloading, significantly impacting performance.</p>
+</li>
+</ol>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/c&#43;&#43;/">C&#43;&#43;</a></li>
+      <li><a href="http://localhost:1313/tags/performance/">Performance</a></li>
+      <li><a href="http://localhost:1313/tags/cache-optimization/">Cache Optimization</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="next" href="http://localhost:1313/posts/cache-optimization-through-prefetching/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Cache Optimization through Prefetching: Enhancing Non-Contiguous Data Processing</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">Tattvartha Code</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>
