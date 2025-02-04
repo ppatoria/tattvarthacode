@@ -55,11 +55,25 @@
     </item>
     <item>
       <title></title>
+      <link>http://localhost:1313/posts/cache_coherence_protocols/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/cache_coherence_protocols/</guid>
+      <description>&lt;p&gt;&lt;strong&gt;Title&lt;/strong&gt;: &amp;ldquo;An Overview of Cache Coherence Protocols in Multi-Core Architectures&amp;rdquo;&lt;br&gt;
+&lt;strong&gt;Date&lt;/strong&gt;: 2025-02-03T12:00:00+05:30&lt;br&gt;
+&lt;strong&gt;Author&lt;/strong&gt;: &amp;ldquo;Pralay Patoria&amp;rdquo;&lt;br&gt;
+&lt;strong&gt;Tags&lt;/strong&gt;: [&amp;ldquo;C++&amp;rdquo;, &amp;ldquo;Performance&amp;rdquo;, &amp;ldquo;Cache Optimization&amp;rdquo;, &amp;ldquo;Multi-Core Architectures&amp;rdquo;]&lt;br&gt;
+&lt;strong&gt;Categories&lt;/strong&gt;: [&amp;ldquo;Low-Latency Programming&amp;rdquo;, &amp;ldquo;Computer Architecture&amp;rdquo;]&lt;br&gt;
+&lt;strong&gt;Draft&lt;/strong&gt;: true&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;
+&lt;p&gt;Modern multi-core processors use private caches to speed up data access and reduce latency. However, when multiple cores access the same memory locations, ensuring consistency across caches becomes crucial. &lt;strong&gt;Cache coherence&lt;/strong&gt; ensures that all cores observe a consistent view of memory, preventing stale or incorrect data from affecting computation.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title></title>
       <link>http://localhost:1313/posts/what_is_false_sharing/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>http://localhost:1313/posts/what_is_false_sharing/</guid>
-      <description>&lt;p&gt;It seems there is some redundancy in the content, particularly with the &amp;ldquo;When Does False Sharing Happen?&amp;rdquo; section being repeated twice. We can condense it to remove this repetition and maintain clarity. Here’s the revised version:&lt;/p&gt;
-&lt;hr&gt;
+      <description>&lt;hr&gt;
 &lt;p&gt;&lt;strong&gt;Title&lt;/strong&gt;: &amp;ldquo;Understanding False Sharing in Multi-Core Architectures&amp;rdquo;&lt;br&gt;
 &lt;strong&gt;Date&lt;/strong&gt;: 2025-02-02T12:00:00+05:30&lt;br&gt;
 &lt;strong&gt;Author&lt;/strong&gt;: &amp;ldquo;Pralay Patoria&amp;rdquo;&lt;br&gt;
