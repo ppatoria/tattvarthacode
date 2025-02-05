@@ -73,7 +73,7 @@
 &lt;strong&gt;Draft&lt;/strong&gt;: true&lt;/p&gt;
 &lt;hr&gt;
 &lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;
-&lt;p&gt;Modern multi-core processors use private caches to speed up data access and reduce latency. However, when multiple cores access the same memory locations, ensuring consistency across caches becomes crucial. &lt;strong&gt;Cache coherence&lt;/strong&gt; ensures that all cores observe a consistent view of memory, preventing stale or incorrect data from affecting computation.&lt;/p&gt;</description>
+&lt;p&gt;Modern multi-core processors rely on private caches to reduce latency and improve performance. However, when multiple cores access the same memory location, ensuring consistency across caches becomes essential. &lt;strong&gt;Cache coherence&lt;/strong&gt; guarantees that all cores observe a consistent view of memory, preventing stale or incorrect data from affecting computations.&lt;/p&gt;</description>
     </item>
     <item>
       <title></title>
